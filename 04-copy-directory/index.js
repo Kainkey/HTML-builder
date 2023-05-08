@@ -1,29 +1,35 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
+
+async function copyDirectory(sourceDir, targetDir) {
+  try {
+    await fs.access(targetDir);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      await fs.mkdir(targetDir);
+    } else {
+      throw error;
+    }
+  }
+
+  const files = await fs.readdir(sourceDir);
+
+  for (const file of files) {
+    const sourcePath = path.join(sourceDir, file);
+    const targetPath = path.join(targetDir, file);
+    const stats = await fs.stat(sourcePath);
+
+    if (stats.isDirectory()) {
+      await copyDirectory(sourcePath, targetPath);
+    } else {
+      await fs.copyFile(sourcePath, targetPath);
+    }
+  }
+}
 
 const sourceDir = path.join(__dirname, 'files');
 const targetDir = path.join(__dirname, 'files-copy');
 
-function copyDirectoryRecursive(source, target) {
-  // Создаем директорию если она не существует
-  if (!fs.existsSync(target)) {
-    fs.mkdirSync(target);
-  }
-
-  // Читаем содержимое исходной директории
-  fs.readdirSync(source).forEach(name => {
-    const sourcePath = path.join(source, name);
-    const targetPath = path.join(target, name);
-
-    // Если элемент является директорией, рекурсивно копируем её содержимое
-    if (fs.lstatSync(sourcePath).isDirectory()) {
-      copyDirectoryRecursive(sourcePath, targetPath);
-    } else { // Если элемент является файлом, копируем его
-      fs.copyFileSync(sourcePath, targetPath);
-    }
-  });
-}
-
-copyDirectoryRecursive(sourceDir, targetDir);
-console.log('Копирование завершено.');
-
+copyDirectory(sourceDir, targetDir)
+  .then(() => console.log('Directory copied successfully'))
+  .catch((error) => console.error(error));
