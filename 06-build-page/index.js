@@ -8,6 +8,8 @@ const STYLE_FILE = "style.css";
 const ASSETS_DIR = path.join(__dirname,"assets");
 const PROJECT_DIST_DIR = path.join(__dirname,"project-dist");
 
+
+
 // Функция для замены шаблонных тегов в шаблонном файле
 async function replaceTemplateTags(templateContent, components) {
   const templateTags = templateContent.match(/{{\w+}}/g) || [];
@@ -57,14 +59,14 @@ async function buildPage() {
 
     // Собираем компоненты
     const components = {};
-    const files = await fsPromises.readdir(".");
+    const COMPONENTS_DIR = path.join(__dirname,"components");
+
+    const files = await fsPromises.readdir(COMPONENTS_DIR);
     const htmlFiles = files.filter((file) => path.extname(file) === ".html");
     for (const file of htmlFiles) {
-      if (file !== TEMPLATE_FILE) {
-        const componentName = path.basename(file, ".html");
-        const componentContent = await fsPromises.readFile(file, "utf-8");
-        components[componentName] = componentContent;
-      }
+      const componentName = path.basename(file, ".html");
+      const componentContent = await fsPromises.readFile(path.join(COMPONENTS_DIR, file), "utf-8");
+      components[componentName] = componentContent;
     }
 
     // Заменяем теги в шаблоне на компоненты
