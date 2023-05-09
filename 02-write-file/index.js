@@ -10,12 +10,14 @@ const rl = readline.createInterface({
 });
 
 const writeStream = fs.createWriteStream(filePath, { flags: 'a' });
+let exitFlag = false;
 
 function askQuestion() {
   rl.question('Введите текст для записи в файл: ', (answer) => {
     if (answer.toLowerCase() === 'exit') {
       console.log('Прощай!');
       writeStream.end();
+      exitFlag = true;
       return rl.close();
     }
     writeStream.write(answer + '\n');
@@ -35,8 +37,14 @@ writeStream.on('error', (error) => {
 });
 
 process.on('SIGINT', () => {
-  console.log('Прощай!');
   writeStream.end();
   rl.close();
   process.exit();
+});
+
+process.on('beforeExit', () => {
+  if (!exitFlag) {
+    console.log('\nПрощай!');
+    console.log('Запись в файл завершена.');
+  }
 });
