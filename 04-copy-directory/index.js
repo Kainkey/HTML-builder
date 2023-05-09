@@ -4,6 +4,16 @@ const path = require('path');
 async function copyDirectory(sourceDir, targetDir) {
   try {
     await fs.access(targetDir);
+    const files = await fs.readdir(targetDir);
+    for (const file of files) {
+      const filePath = path.join(targetDir, file);
+      const stats = await fs.stat(filePath);
+      if (stats.isDirectory()) {
+        await fs.rmdir(filePath, { recursive: true });
+      } else {
+        await fs.unlink(filePath);
+      }
+    }
   } catch (error) {
     if (error.code === 'ENOENT') {
       await fs.mkdir(targetDir);
