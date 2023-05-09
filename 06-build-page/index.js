@@ -35,21 +35,21 @@ async function collectStyles(stylesDir) {
 
 // Функция для копирования папки assets
 async function copyAssets(sourceDir, targetDir) {
-  const files = await fsPromises.readdir(sourceDir);
-  await fsPromises.mkdir(targetDir, { recursive: true });
-  await Promise.all(
-    files.map(async (file) => {
+    await fsPromises.mkdir(targetDir, { recursive: true });
+    const files = await fsPromises.readdir(sourceDir);
+    for (const file of files) {
       const sourcePath = path.join(sourceDir, file);
       const targetPath = path.join(targetDir, file);
       const stat = await fsPromises.stat(sourcePath);
       if (stat.isFile()) {
         await fsPromises.copyFile(sourcePath, targetPath);
       } else if (stat.isDirectory()) {
-        await copyAssets(sourcePath, targetPath);
+        const relativePath = path.relative(ASSETS_DIR, sourcePath);
+        const newTargetDir = path.join(targetDir, "assets", relativePath);
+        await copyAssets(sourcePath, newTargetDir);
       }
-    })
-  );
-}
+    }
+  }
 
 // Функция для сборки страницы
 async function buildPage() {
